@@ -1,0 +1,24 @@
+MOELLER FILE ASSISTANT DEMO 0.2.0
+
+This installer installs the actual Windows desktop application, its bundled .NET runtime, PDF metadata utility, and local SQLite support. It then creates all 16 fictional jobs, sample artwork, database records and simulated destination folders automatically.
+
+You do not need Visual Studio, Python, Node.js, a database server, an internet connection at run time, or any Moeller credentials. The application is installed for your Windows user account. No server or command window must remain open.
+
+The only installation path is this Setup application. Do not run source-code build scripts on the laptop merely to use the demo.
+
+Application location:
+%LOCALAPPDATA%\Programs\Moeller\FileAssistantDemo
+
+Fictional workspace:
+%LOCALAPPDATA%\Moeller\FileAssistantDemo\Workspace
+
+The installer registers Moeller File Assistant for PDF and ZIP right-click menus. Windows 11 may place it under Show more options. A Send to > Moeller File Assistant shortcut is also installed.
+
+Customer-provided demonstration originals remain in provided. Assigned copies go to production. Earlier revisions go to previous versions. Each submission has its own package under submissions. PrintShare and Apogee sample destinations are local folders under Simulated Outputs.
+
+No actual Moeller Hub, MOD, Printer's Plan, Apogee, network share, printer or hotfolder is contacted. Sample apoXML and JDF files are clearly marked unvalidated and are not claims of Apogee compatibility.
+
+WINDOWS TRUST NOTICE
+This custom demonstration is unsigned. Windows Smart App Control or a managed application-control policy can block an unsigned application or DLL. This installer does not disable security protections, install a trusted-root certificate, create antivirus exclusions, or bypass company policy. A trusted signing certificate or an approved development environment is required where such a policy enforces signed software.
+
+Repairing the same application version preserves the working database. Reset Demo asks for confirmation and archives the prior state. Uninstall removes the program and Explorer integration but preserves your demonstration workspace and backups.
