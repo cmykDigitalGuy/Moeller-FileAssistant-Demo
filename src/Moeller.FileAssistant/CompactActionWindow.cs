@@ -4,6 +4,12 @@ namespace Moeller.FileAssistant;
 /// Task-first shell panel. All operations remain inside the fictional local workspace.
 /// The legacy full dashboard is only accessible deliberately under More.
 /// </summary>
+internal sealed record DisplayFile(string Path)
+{
+    public string Filename=>System.IO.Path.GetFileName(Path);
+    public override string ToString()=>Filename;
+}
+
 public sealed class CompactActionWindow : WorkWindow
 {
     private readonly string mode;
@@ -77,7 +83,7 @@ public sealed class CompactActionWindow : WorkWindow
             }
             catch(Exception e){Status.Text="Ignored unsupported path: "+e.Message;}
         }
-        fileBox.ItemsSource=selectedPaths.OrderBy(Path.GetFileName).ToArray();
+        fileBox.ItemsSource=selectedPaths.OrderBy(Path.GetFileName).Select(p=>new DisplayFile(p)).ToArray();
         if(fileBox.SelectedIndex<0 && selectedPaths.Count>0)fileBox.SelectedIndex=0;
         if(selectedPaths.Count==0)
         {
@@ -142,7 +148,9 @@ public sealed class CompactActionWindow : WorkWindow
 
     private void ChooseFile()
     {
-        if(fileBox.SelectedItem is not string selected){job=null;return;}
+        if(fileBox.SelectedItem is not DisplayFile choice){job=null;return;}
+        string selected=choice.Path;
+        fileBox.ToolTip=selected;
         job=Engine.JobForPath(selected);
         if(job==null){Status.Text="This file is not in a demonstration job.";return;}
         var items=Engine.Items(job.Id);
@@ -169,8 +177,9 @@ public sealed class CompactActionWindow : WorkWindow
     }
     private async Task ExecuteAsync()
     {
-        if(fileBox.SelectedItem is not string path||job==null)
+        if(fileBox.SelectedItem is not DisplayFile fileChoice||job==null)
             throw new InvalidOperationException("Choose a PDF inside a fictional demo job first.");
+        string path=fileChoice.Path;
         if(mode=="replace")
         {
             if(existingBox.SelectedItem is not Artwork current)
