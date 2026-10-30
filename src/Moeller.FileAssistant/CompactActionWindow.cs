@@ -188,9 +188,17 @@ public sealed class CompactActionWindow : WorkWindow
         if(!Ui.Confirm(this,$"Create the working copy?\n\nJob: {job.Number}\nItem: {item.Number}\nVersion: V{v:00}\nQuantity: {q:N0}\nComponent: {component}\n\nOriginal file remains untouched."))return;
         if(await Work(()=>
         {
+            var current=Engine.Designs(item.Id).FirstOrDefault(d=>d.Number==v);
+            var occupied=Engine.Artworks(job.Id).Any(f=>f.ItemId==item.Id && f.Version==v &&
+                f.Component.Split('+').Intersect(component.Split('+'),StringComparer.OrdinalIgnoreCase).Any());
+            if(mode=="version" && occupied)
+            {
+                if(current==null || current.Quantity!=q)Engine.SaveDesign(item.Id,v,q);
+                return "Version allocation saved. Existing working file kept; Ready cleared if quantity changed.";
+            }
+            if(occupied)throw new InvalidOperationException("This version already has that component. Use Replace Artwork or choose another version.");
             if(mode=="version")
             {
-                var current=Engine.Designs(item.Id).FirstOrDefault(d=>d.Number==v);
                 if(current==null||current.Quantity!=q)Engine.SaveDesign(item.Id,v,q);
             }
             var assigned=Engine.Assign(new Assignment(path,item.Id,v,q,component,false));
