@@ -8,16 +8,48 @@ namespace Moeller.FileAssistant;
 
 internal static class ShellIntegration
 {
-    public const string Verb="MoellerFileAssistantDemo";
-    public static string Executable=>Environment.ProcessPath??throw new IOException("Application executable path is unavailable.");
-    private static string Key(string extension)=>@"Software\Classes\SystemFileAssociations\"+extension+@"\shell\"+Verb;
+    public const string Verb="MoellerHub";
+    private const string OldVerb="MoellerFileAssistantDemo";
+    public static string Executable=>Environment.ProcessPath??throw new IOException("Application executable path unavailable.");
+    private static string Base(string ext)=>@"Software\Classes\SystemFileAssociations\"+ext+@"\shell\";
+    private static readonly (string Id,string Label,string Action)[] Actions =
+    [
+        ("01Assign","Assign Artwork","assign"),
+        ("02Version","Create Version / Split Quantity","version"),
+        ("03Component","Assign Component","component"),
+        ("04Replace","Replace Artwork","replace"),
+        ("05More","More...","more")
+    ];
     public static void Register()
     {
-        foreach(string extension in new[]{".pdf",".zip"})
+        foreach(var ext in new[]{".pdf",".zip"})
         {
-            using var verb=Registry.CurrentUser.CreateSubKey(Key(extension));
-            verb.SetValue("","Moeller File Assistant");verb.SetValue("Icon",Executable);verb.SetValue("MultiSelectModel","Player");
-            using var command=verb.CreateSubKey("command");command.SetValue("","\""+Executable+"\" --select \"%1\"");
+            Registry.CurrentUser.DeleteSubKeyTree(Base(ext)+OldVerb,false);
+            Registry.CurrentUser.DeleteSubKeyTree(Base(ext)+Verb,false);
+            using var root=Registry.CurrentUser.CreateSubKey(Base(ext)+Verb)!;
+            root.SetValue("MUIVerb","Moeller Hub");
+            root.SetValue("Icon",Executable);
+            root.SetValue("SubCommands","");
+            root.SetValue("MultiSelectModel","Player");
+            using var shell=root.CreateSubKey("shell")!;
+            foreach(var action in Actions)
+            {
+                using var item=shell.CreateSubKey(action.Id)!;
+                item.SetValue("MUIVerb",action.Label);
+                item.SetValue("MultiSelectModel","Player");
+                if(action.Action=="more")item.SetValue("CommandFlags",0x20,RegistryValueKind.DWord);
+                using var command=item.CreateSubKey("command")!;
+                command.SetValue("", "\""+Executable+"\" --action "+action.Action+" --select \"%1\"");
+            }
+        }
+        SHChangeNotify(0x08000000,0,IntPtr.Zero,IntPtr.Zero);
+    }
+    public static void Unregister()
+    {
+        foreach(var ext in new[]{".pdf",".zip"})
+        {
+            Registry.CurrentUser.DeleteSubKeyTree(Base(ext)+Verb,false);
+            Registry.CurrentUser.DeleteSubKeyTree(Base(ext)+OldVerb,false);
         }
         SHChangeNotify(0x08000000,0,IntPtr.Zero,IntPtr.Zero);
     }
@@ -25,22 +57,28 @@ internal static class ShellIntegration
     {
         get
         {
-            foreach(string extension in new[]{".pdf",".zip"})
+            foreach(var ext in new[]{".pdf",".zip"})
             {
-                using var key=Registry.CurrentUser.OpenSubKey(Key(extension)+@"\command");
-                if(!string.Equals(key?.GetValue("") as string,"\""+Executable+"\" --select \"%1\"",StringComparison.OrdinalIgnoreCase))return false;
+                using var root=Registry.CurrentUser.OpenSubKey(Base(ext)+Verb);
+                if((root?.GetValue("MUIVerb") as string)!="Moeller Hub" || root.GetValue("SubCommands") is not string)return false;
+                foreach(var action in Actions)
+                {
+                    using var cmd=Registry.CurrentUser.OpenSubKey(Base(ext)+Verb+@"\shell\"+action.Id+@"\command");
+                    if((cmd?.GetValue("") as string)!="\""+Executable+"\" --action "+action.Action+" --select \"%1\"")return false;
+                }
             }
             return true;
         }
     }
     public static bool StartupEnabled
     {
-        get{using var key=Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");return key?.GetValue(Verb)!=null;}
+        get{using var key=Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");return key?.GetValue("MoellerFileAssistantDemo")!=null;}
     }
     public static void SetStartup(bool enabled)
     {
-        using var key=Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
-        if(enabled)key.SetValue(Verb,"\""+Executable+"\" --tray");else key.DeleteValue(Verb,false);
+        using var key=Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run")!;
+        if(enabled)key.SetValue("MoellerFileAssistantDemo","\""+Executable+"\" --tray");
+        else key.DeleteValue("MoellerFileAssistantDemo",false);
     }
     [DllImport("shell32.dll")]private static extern void SHChangeNotify(uint eventId,uint flags,IntPtr item1,IntPtr item2);
 }
