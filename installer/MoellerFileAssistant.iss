@@ -1,4 +1,4 @@
-#define AppVersion "0.2.0"
+#define AppVersion "0.2.1"
 #define AppExe "Moeller.FileAssistant.exe"
 
 [Setup]
@@ -47,14 +47,6 @@ Name: "{autodesktop}\Moeller File Assistant Demo"; Filename: "{app}\{#AppExe}"; 
 Name: "{userappdata}\Microsoft\Windows\SendTo\Moeller File Assistant"; Filename: "{app}\{#AppExe}"; Parameters: "--select"
 
 [Registry]
-Root: HKCU; Subkey: "Software\Classes\SystemFileAssociations\.pdf\shell\MoellerFileAssistantDemo"; ValueType: string; ValueName: ""; ValueData: "Moeller File Assistant"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Classes\SystemFileAssociations\.pdf\shell\MoellerFileAssistantDemo"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#AppExe}"
-Root: HKCU; Subkey: "Software\Classes\SystemFileAssociations\.pdf\shell\MoellerFileAssistantDemo"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
-Root: HKCU; Subkey: "Software\Classes\SystemFileAssociations\.pdf\shell\MoellerFileAssistantDemo\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExe}"" --select ""%1"""
-Root: HKCU; Subkey: "Software\Classes\SystemFileAssociations\.zip\shell\MoellerFileAssistantDemo"; ValueType: string; ValueName: ""; ValueData: "Moeller File Assistant"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Classes\SystemFileAssociations\.zip\shell\MoellerFileAssistantDemo"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#AppExe}"
-Root: HKCU; Subkey: "Software\Classes\SystemFileAssociations\.zip\shell\MoellerFileAssistantDemo"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
-Root: HKCU; Subkey: "Software\Classes\SystemFileAssociations\.zip\shell\MoellerFileAssistantDemo\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExe}"" --select ""%1"""
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "MoellerFileAssistantDemo"; ValueData: """{app}\{#AppExe}"" --tray"; Tasks: startup; Flags: uninsdeletevalue
 
 [Run]
@@ -111,6 +103,7 @@ begin
     if not UninstallSilent then MsgBox('Finish the current file operation and Exit the assistant from its tray before uninstalling.', mbError, MB_OK);
     Result := False;
   end;
+  if Result then Exec(ExpandConstant('{app}\{#AppExe}'), '--unregister', '', SW_HIDE, ewWaitUntilTerminated, Code);
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
