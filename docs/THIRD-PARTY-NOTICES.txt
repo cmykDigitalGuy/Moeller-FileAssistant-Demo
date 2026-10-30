@@ -1,0 +1,40 @@
+MOELLER FILE ASSISTANT DEMO - THIRD-PARTY COMPONENTS
+
+Application version: 0.2.0
+This file identifies third-party components. Their original copyright and licence notices remain authoritative. Build packaging retains available runtime and utility notices alongside this file.
+
+Microsoft .NET 10 and Windows Desktop runtime
+Copyright Microsoft and contributors. MIT licence and associated third-party notices.
+https://github.com/dotnet/runtime/blob/main/LICENSE.TXT
+https://github.com/dotnet/wpf/blob/main/LICENSE.TXT
+The self-contained publish includes the runtime needed by the application.
+
+Microsoft.Data.Sqlite 10.0.14
+Copyright .NET Foundation and contributors. MIT licence.
+https://github.com/dotnet/efcore/blob/main/LICENSE.txt
+Native SQLite is supplied through the resolved SQLitePCLRaw dependencies. SQLite itself is in the public domain; SQLitePCLRaw wrapper code has its own open-source notice.
+https://www.sqlite.org/copyright.html
+https://github.com/ericsink/SQLitePCL.raw/blob/master/LICENSE.TXT
+
+PDFsharp 6.2.4
+Copyright empira Software GmbH and contributors. MIT licence.
+https://github.com/empira/PDFsharp/blob/v6.2.4/LICENSE
+Used to validate and independently read embedded PDF identity metadata. This application does not use the separately licensed PDFsharp 6.5 writing functionality.
+
+System.Security.Cryptography.Pkcs 10.0.14
+Copyright Microsoft and contributors. MIT licence; part of the .NET runtime libraries.
+
+ExifTool 13.60, Windows x64 package
+Copyright Phil Harvey and contributors. Distributed under the same terms as Perl: Artistic License or GNU General Public License, as applicable to the included components. The complete Windows utility folder, including exiftool_files and available licence notices, is retained without removing its required runtime.
+https://exiftool.org/
+https://exiftool.org/#license
+ExifTool is invoked as a separate bundled executable to update XMP in a staged working PDF. Customer-provided originals are not modified.
+
+Inno Setup
+Copyright Jordan Russell, Martijn Laan and contributors. The installer is built with Inno Setup; original licence text is included with build notices when available.
+https://jrsoftware.org/files/is/license.txt
+
+Test/build-only components
+xUnit, xunit.runner.visualstudio and Microsoft.NET.Test.Sdk are used by the developer regression suite and are not required on the end user's laptop. Their respective licences apply in the source/build dependency distribution.
+
+No font files are included. The native interface uses Windows-provided system fonts. Fictional PDF fixtures reference standard PDF Helvetica without shipping a font program.
