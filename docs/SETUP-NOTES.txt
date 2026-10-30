@@ -1,4 +1,4 @@
-MOELLER FILE ASSISTANT DEMO 0.2.0
+MOELLER FILE ASSISTANT DEMO 0.2.1
 
 This installer installs the actual Windows desktop application, its bundled .NET runtime, PDF metadata utility, and local SQLite support. It then creates all 16 fictional jobs, sample artwork, database records and simulated destination folders automatically.
 
