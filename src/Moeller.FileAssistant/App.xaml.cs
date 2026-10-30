@@ -10,6 +10,9 @@ public partial class App : Application
     private Moeller.Core.Engine? service;
     private MainWindow? main;
     private SelectionWindow? selection;
+    private CompactActionWindow? compact;
+    private string pendingAction="more";
+    private bool ipcSimulation;
     private System.Windows.Forms.NotifyIcon? tray;
     private readonly List<string[]> queued=[];
     private readonly HashSet<string> pendingPaths=new(StringComparer.OrdinalIgnoreCase);
@@ -43,9 +46,10 @@ public partial class App : Application
                 Shutdown(delivered?0:2);return;
             }
             if(e.Args.Contains("--shutdown")){Exiting=true;Shutdown(0);return;}
+            if(e.Args.Contains("--unregister")){ShellIntegration.Unregister();Exiting=true;Shutdown(0);return;}
             messages=new LocalMessages(Receive);
             service=await Task.Run(()=>new Moeller.Core.Engine());ready=true;
-            if(e.Args.Contains("--initialize")){WriteResult("initialization.json",new{Version=Moeller.Core.Engine.Version,Jobs=service.Jobs().Count,Checks=service.Diagnostics()});Exiting=true;Shutdown(0);return;}
+            if(e.Args.Contains("--initialize")){ShellIntegration.Register();WriteResult("initialization.json",new{Version=Moeller.Core.Engine.Version,Jobs=service.Jobs().Count,Checks=service.Diagnostics()});Exiting=true;Shutdown(0);return;}
             int export=Array.IndexOf(e.Args,"--export-demo");
             if(export>=0)
             {
@@ -69,6 +73,7 @@ public partial class App : Application
             int ipc=Array.IndexOf(e.Args,"--ipc-smoke");
             if(ipc>=0)
             {
+                ipcSimulation=true;
                 if(ipc+1>=e.Args.Length)throw new ArgumentException("IPC report destination is required.");
                 string report=e.Args[ipc+1];Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(report))!);
                 File.WriteAllText(report+".ready","ready");
@@ -99,6 +104,8 @@ public partial class App : Application
         if(!ready){queued.Add(arguments);return;}
         if(arguments.Contains("--select"))
         {
+            int actionIndex=Array.IndexOf(arguments,"--action");
+            if(actionIndex>=0&&actionIndex+1<arguments.Length)pendingAction=arguments[actionIndex+1];
             int index=Array.IndexOf(arguments,"--select");
             foreach(string path in arguments.Skip(index+1).Where(p=>!p.StartsWith("--",StringComparison.Ordinal)))
             {
@@ -113,13 +120,23 @@ public partial class App : Application
     {
         if(BusyCount>0)return;selectionTimer?.Stop();if(service==null||pendingPaths.Count==0)return;
         var paths=pendingPaths.ToArray();pendingPaths.Clear();
-        if(selection==null)
+        if(ipcSimulation)
         {
-            selection=new SelectionWindow(service,paths);selection.Closed+=(_,_)=>selection=null;selection.Show();
+            if(selection==null){selection=new SelectionWindow(service,paths);selection.Closed+=(_,_)=>selection=null;selection.Show();}
+            else selection.AddPaths(paths);
+            if(selection.WindowState==WindowState.Minimized)selection.WindowState=WindowState.Normal;
+            selection.Activate();
+            return;
         }
-        else selection.AddPaths(paths);
-        if(selection.WindowState==WindowState.Minimized)selection.WindowState=WindowState.Normal;
-        selection.Activate();
+        if(compact==null)
+        {
+            compact=new CompactActionWindow(service,paths,pendingAction);
+            compact.Closed+=(_,_)=>compact=null;
+            compact.Show();
+        }
+        else compact.AddPaths(paths);
+        if(compact.WindowState==WindowState.Minimized)compact.WindowState=WindowState.Normal;
+        compact.Activate();
     }
     public async Task ShowMainAsync(int? jobId=null)
     {
