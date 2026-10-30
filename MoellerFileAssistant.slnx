@@ -1,0 +1,18 @@
+<Solution>
+ <Configurations><Platform Name="x64" /></Configurations>
+ <Folder Name="/Documentation/">
+  <File Path="README.md" />
+  <File Path="docs/SETUP-NOTES.txt" />
+  <File Path="docs/THIRD-PARTY-NOTICES.txt" />
+ </Folder>
+ <Folder Name="/Build and Installer/">
+  <File Path="tools/Build-Windows.ps1" />
+  <File Path="tools/Prepare-Tools.ps1" />
+  <File Path="tools/Package-Windows.ps1" />
+  <File Path="installer/MoellerFileAssistant.iss" />
+ </Folder>
+ <Project Path="src/Moeller.FileAssistant/Moeller.FileAssistant.csproj" DefaultStartup="true"><Platform Project="x64" /></Project>
+ <Project Path="src/Moeller.Core/Moeller.Core.csproj"><Platform Project="x64" /></Project>
+ <Project Path="tests/Moeller.Tests/Moeller.Tests.csproj"><Platform Project="x64" /></Project>
+ <Project Path="installer/Moeller.Setup.csproj"><Platform Project="x64" /></Project>
+</Solution>
