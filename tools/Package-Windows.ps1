@@ -49,14 +49,14 @@ try {
  $artifacts=Join-Path $root 'artifacts';New-Item $artifacts -ItemType Directory -Force | Out-Null
  & $compiler installer/MoellerFileAssistant.iss 2>&1 | Out-File (Join-Path $artifacts 'installer-compile.log') -Encoding utf8
  if($LASTEXITCODE -ne 0){Get-Content (Join-Path $artifacts 'installer-compile.log') -Tail 20;throw 'Installer compilation failed.'}
- $setup=Join-Path $artifacts 'Moeller-File-Assistant-Demo-0.2.0-Setup.exe'
+ $setup=Join-Path $artifacts 'Moeller-File-Assistant-Demo-0.2.1-Setup.exe'
  if(!(Test-Path $setup)){throw 'Compiled setup file is missing.'}
  $stage=Join-Path $root '_installer-package';New-Item $stage -ItemType Directory -Force | Out-Null
  Copy-Item $setup $stage -Force
  Copy-Item docs/SETUP-NOTES.txt (Join-Path $stage 'START-HERE.txt') -Force
  Copy-Item $licenses $stage -Recurse -Force
  ((File-SHA256 $setup)+'  '+[IO.Path]::GetFileName($setup)) | Set-Content (Join-Path $stage 'SHA256.txt')
- $zip=Join-Path $artifacts 'Moeller-File-Assistant-Demo-0.2.0-Installer.zip'
+ $zip=Join-Path $artifacts 'Moeller-File-Assistant-Demo-0.2.1-Installer.zip'
  if(Test-Path $zip){Remove-Item $zip -Force}
  [IO.Compression.ZipFile]::CreateFromDirectory($stage,$zip)
  Write-Output "SETUP READY: $setup"
