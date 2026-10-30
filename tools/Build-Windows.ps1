@@ -51,18 +51,18 @@ try {
   Record 'Multi-file Send To shortcut' (Test-Path $sendTo) 'Per-user Send To shortcut exists.'
   Run-App $installed @('--ui-smoke',(Join-Path $evidence 'main-window.png')) 180
   $ui=Get-Content (Join-Path $evidence 'ui-smoke.json') -Raw|ConvertFrom-Json
-  Record 'Native window startup and rendering' ($ui.Result -eq 'Passed' -and $ui.WindowsRendered -eq 5) 'Five actual WPF windows opened and rendered.'
+  Record 'Native window startup and rendering' ($ui.Result -eq 'Passed' -and $ui.WindowsRendered -eq 10) 'Ten WPF windows rendered, including all five compact action windows.'
   $ipcReport=Join-Path $evidence 'ipc-selection.json';$primary=Start-App $installed @('--ipc-smoke',$ipcReport)
   $deadline=[DateTime]::UtcNow.AddSeconds(30)
   while(!(Test-Path ($ipcReport+'.ready')) -and [DateTime]::UtcNow -lt $deadline -and !$primary.HasExited){Start-Sleep -Milliseconds 100}
   if(!(Test-Path ($ipcReport+'.ready'))){throw 'IPC assistant did not become ready.'}
   $samples=@(Get-ChildItem (Join-Path $workspace 'archive') -Recurse -File -Filter '*.pdf'|Where-Object{$_.DirectoryName -match 'Northstar.*provided$'}|Sort-Object Name|Select-Object -First 3)
   if($samples.Count -ne 3){throw 'Three multi-select samples were not found.'}
-  $clients=@();foreach($sample in $samples){$clients+=Start-App $installed @('--select',$sample.FullName)}
+  $clients=@();foreach($sample in $samples){$clients+=Start-App $installed @('--action','assign','--select',$sample.FullName)}
   foreach($client in $clients){if(!$client.WaitForExit(25000) -or $client.ExitCode -ne 0){throw 'Secondary selection process failed.'}}
   if(!$primary.WaitForExit(30000) -or $primary.ExitCode -ne 0){throw 'Primary selection process failed.'}
   $ipc=Get-Content $ipcReport -Raw|ConvertFrom-Json
-  Record 'Multi-process Explorer selection handoff' ($ipc.Received -eq 3 -and $ipc.PopupCount -eq 1 -and $ipc.VisiblePopup) 'Three selected-file invocations reached one visible native popup.'
+  Record 'Multi-process Explorer selection handoff' ($ipc.Received -eq 3 -and $ipc.PopupCount -eq 1 -and $ipc.VisiblePopup) 'Three direct Assign Artwork invocations reached one visible compact native popup.'
   $demoZip=Join-Path $artifacts 'Moeller-File-Assistant-Demo-0.2.1-Demo-State.zip'
   Run-App $installed @('--export-demo',$demoZip) 300
   Record 'Installed demo ZIP export' (Test-Path $demoZip) 'Installed application exported and checksum-verified its complete fictional state.'
