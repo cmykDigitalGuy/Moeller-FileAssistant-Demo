@@ -1,0 +1,46 @@
+name: Publish verified installer as direct download
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-direct-installer.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Retrieve previously verified Windows installer
+        uses: actions/download-artifact@v4
+        with:
+          name: Moeller-FileAssistant-Demo-Windows-x64
+          run-id: 41003559906
+          github-token: ${{ github.token }}
+          path: incoming
+      - name: Confirm expected installer checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          find incoming -maxdepth 4 -type f -printf '%p %s bytes\n'
+          INSTALLER="$(find incoming -type f -name 'Moeller-File-Assistant-Demo-0.2.1-Setup.exe' -print -quit)"
+          test -n "$INSTALLER"
+          test -s "$INSTALLER"
+          mkdir -p release
+          cp "$INSTALLER" release/Moeller-File-Assistant-Demo-0.2.1-Setup.exe
+          echo 'f62cd409f2237d90a7c9bbf1a0e9121e473729768f2f9b624669dd18475b8762  release/Moeller-File-Assistant-Demo-0.2.1-Setup.exe' | sha256sum --check
+          (cd release && sha256sum Moeller-File-Assistant-Demo-0.2.1-Setup.exe > SHA256SUMS.txt)
+      - name: Publish direct GitHub Releases download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create v0.2.1 release/Moeller-File-Assistant-Demo-0.2.1-Setup.exe release/SHA256SUMS.txt \
+            --repo "$GITHUB_REPOSITORY" \
+            --target 0132187788ec5477265e5ceaca1a8a6c52a9c297 \
+            --title 'Moeller Hub File Assistant Demo v0.2.1 (unsigned)' \
+            --notes 'Offline Windows x64 demo. Contains fictional jobs, local SQLite demo database, and Explorer Moeller Hub submenu. Installer checksum verified against Windows-tested build. No production servers contacted. Executable is unsigned; Windows application-control rules may block it. Do not disable security settings solely to test.' \
+            --prerelease
