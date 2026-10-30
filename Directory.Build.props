@@ -6,7 +6,7 @@
     <LangVersion>latest</LangVersion>
     <Platforms>x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
     <Deterministic>true</Deterministic>
     <NuGetAudit>true</NuGetAudit>
     <NuGetAuditMode>all</NuGetAuditMode>
