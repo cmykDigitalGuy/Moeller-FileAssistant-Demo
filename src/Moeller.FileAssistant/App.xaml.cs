@@ -73,7 +73,7 @@ public partial class App : Application
             int ipc=Array.IndexOf(e.Args,"--ipc-smoke");
             if(ipc>=0)
             {
-                ipcSimulation=true;
+                ipcSimulation=false;
                 if(ipc+1>=e.Args.Length)throw new ArgumentException("IPC report destination is required.");
                 string report=e.Args[ipc+1];Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(report))!);
                 File.WriteAllText(report+".ready","ready");
@@ -81,8 +81,8 @@ public partial class App : Application
                 timer.Tick+=(_,_)=>
                 {
                     timer.Stop();FlushSelection();
-                    File.WriteAllText(report,Safety.Json(new{Received=receivedPaths.Count,Paths=receivedPaths.ToArray(),PopupCount=Windows.OfType<SelectionWindow>().Count(),VisiblePopup=selection?.IsVisible??false}));
-                    if(selection?.IsVisible==true)Ui.Capture(selection,Path.ChangeExtension(report,"png"));
+                    File.WriteAllText(report,Safety.Json(new{Received=receivedPaths.Count,Paths=receivedPaths.ToArray(),PopupCount=Windows.OfType<CompactActionWindow>().Count(),VisiblePopup=compact?.IsVisible??false}));
+                    if(compact?.IsVisible==true)Ui.Capture(compact,Path.ChangeExtension(report,"png"));
                     ExitApplication();
                 };
                 timer.Start();
@@ -174,7 +174,16 @@ public partial class App : Application
         await main!.SelectJobAsync(16);await Task.Delay(200);Ui.Capture(main,Path.Combine(directory,"mixed-job-window.png"));
         var settings=new SettingsWindow(service){Owner=main};settings.Show();await Task.Delay(250);Ui.Capture(settings,Path.Combine(directory,"settings-window.png"));settings.Close();
         var popup=new SelectionWindow(service,service.Sources(2).Take(3));popup.Show();await Task.Delay(250);Ui.Capture(popup,Path.Combine(directory,"explorer-popup.png"));popup.Close();
-        File.WriteAllText(Path.Combine(directory,"ui-smoke.json"),Safety.Json(new{Result="Passed",WindowsRendered=5,Version=Moeller.Core.Engine.Version,Jobs=service.Jobs().Count,OS=Environment.OSVersion.ToString(),Architecture=System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString(),Note="Real WPF windows rendered on Windows. This is not a manual laptop or Windows 11 Explorer test."}));
+        foreach(var mode in new[]{"assign","version","component","replace","more"})
+        {
+            var panel=new CompactActionWindow(service,service.Sources(2).Take(1),mode);
+            panel.Show();
+            await Task.Delay(220);
+            Ui.Capture(panel,Path.Combine(directory,"compact-"+mode+".png"));
+            if(panel.ActualWidth>535)throw new InvalidOperationException("Compact "+mode+" window exceeded quarter-width design.");
+            panel.Close();
+        }
+        File.WriteAllText(Path.Combine(directory,"ui-smoke.json"),Safety.Json(new{Result="Passed",WindowsRendered=10,Version=Moeller.Core.Engine.Version,Jobs=service.Jobs().Count,OS=Environment.OSVersion.ToString(),Architecture=System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString(),Note="All five compact WPF action windows rendered on Windows. This is not manual Windows 11 Explorer acceptance."}));
     }
     private static string ErrorPath=>Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Moeller","FileAssistantDemo","startup-errors.log");
     public static void WriteError(Exception error)
